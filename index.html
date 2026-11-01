@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #242323;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#game {
+    width: 100%;
+    max-width: 950px;
+    display: flex;
+    gap: 35px;
+    align-items: center;
+    justify-content: center;
+}
+
+#left {
+    width: 100%;
+    max-width: 520px;
+}
+
+#top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 15px;
+}
+
+#avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #444;
+}
+
+#opponent {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+#progress {
+    color: #aaa;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+#board {
+    width: 100%;
+    aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border: 5px solid #171717;
+    border-radius: 3px;
+    overflow: hidden;
+    user-select: none;
+}
+
+.square {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    font-size: clamp(25px, 6vw, 54px);
+    line-height: 1;
+}
+
+.light {
+    background: #eeeed2;
+}
+
+.dark {
+    background: #769656;
+}
+
+.square.selected {
+    background: #baca44;
+}
+
+.square.possible::after {
+    content: "";
+    position: absolute;
+    width: 27%;
+    height: 27%;
+    background: rgba(0,0,0,0.23);
+    border-radius: 50%;
+}
+
+.square.capture::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 5px solid rgba(0,0,0,0.23);
+    border-radius: 50%;
+}
+
+.piece {
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.white-piece {
+    color: #fff;
+    -webkit-text-stroke: 1px #555;
+}
+
+.black-piece {
+    color: #202020;
+}
+
+#right {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#message {
+    background: #333;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+#message:empty {
+    display: none;
+}
+
+#action {
+    background: #81b64c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 13px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    display: none;
+}
+
+#action:hover {
+    background: #a0ca65;
+}
+
+#status {
+    font-size: 13px;
+    color: #aaa;
+}
+
+@media (max-width: 750px) {
+    #game {
+        flex-direction: column;
+        gap: 20px;
+        max-width: 520px;
+    }
+
+    #left {
+        max-width: 100%;
+    }
+
+    #right {
+        width: 100%;
+    }
+
+    #message {
+        min-height: 70px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="left">
+
+        <div id="top">
+            <img id="avatar" src="pic1.png">
+
+            <div>
+                <div id="opponent">Player 1</div>
+                <div id="progress">1 / 3</div>
+            </div>
+        </div>
+
+        <div id="board"></div>
+
+    </div>
+
+    <div id="right">
+
+        <div id="status">Your turn</div>
+
+        <div id="message"></div>
+
+        <button id="action"></button>
+
+    </div>
+
+          </div><script>
+
+const players = [
+    {
+        name: "Player 1",
+        picture: "pic1.png",
+        start: "text1",
+        queen: "text2",
+        lose: "text3"
+    },
+    {
+        name: "Player 2",
+        picture: "pic2.png",
+        start: "text1",
+        queen: "text2",
+        lose: "text3"
+    },
+    {
+        name: "Player 3",
+        picture: "pic3.png",
+        start: "text1",
+        queen: "text2",
+        lose: "text3"
+    }
+];
+
+const chess = new Chess();
+
+let currentPlayer = 0;
+let selectedSquare = null;
+let possibleMoves = [];
+let engineThinking = false;
+let gameFinished = false;
+let queenMessageShown = false;
+
+const board = document.getElementById("board");
+const avatar = document.getElementById("avatar");
+const opponent = document.getElementById("opponent");
+const progress = document.getElementById("progress");
+const message = document.getElementById("message");
+const action = document.getElementById("action");
+const status = document.getElementById("status");
+
+const pieces = {
+    wk: "♔",
+    wq: "♕",
+    wr: "♖",
+    wb: "♗",
+    wn: "♘",
+    wp: "♙",
+    bk: "♚",
+    bq: "♛",
+    br: "♜",
+    bb: "♝",
+    bn: "♞",
+    bp: "♟"
+};
+
+const engine = new Worker(
+    "https://cdn.jsdelivr.net/npm/stockfish@16.0.0/stockfish.js"
+);
+
+function showMessage(text) {
+    message.textContent = text;
+}
+
+function setOpponent(index) {
+    currentPlayer = index;
+
+    const player = players[index];
+
+    chess.reset();
+
+    selectedSquare = null;
+    possibleMoves = [];
+    engineThinking = false;
+    gameFinished = false;
+    queenMessageShown = false;
+
+    opponent.textContent = player.name;
+    progress.textContent = `${index + 1} / 3`;
+
+    avatar.src = player.picture;
+
+    showMessage(player.start);
+
+    status.textContent = "Your turn";
+
+    action.style.display = "none";
+
+    renderBoard();
+}
+
+function renderBoard() {
+    board.innerHTML = "";
+
+    for (let rank = 8; rank >= 1; rank--) {
+        for (let file = 0; file < 8; file++) {
+
+            const squareName =
+                "abcdefgh"[file] + rank;
+
+            const square = document.createElement("div");
+
+            const isLight = (rank + file) % 2 === 0;
+
+            square.className =
+                "square " + (isLight ? "light" : "dark");
+
+            if (selectedSquare === squareName) {
+                square.classList.add("selected");
+            }
+
+            const isPossible = possibleMoves.some(
+                move => move.to === squareName
+            );
+
+            if (isPossible) {
+                const target = chess.get(squareName);
+
+                square.classList.add(
+                    target ? "capture" : "possible"
+                );
+            }
+
+            const piece = chess.get(squareName);
+
+            if (piece) {
+                const symbol =
+                    pieces[piece.color + piece.type];
+
+                const pieceElement =
+                    document.createElement("span");
+
+                pieceElement.textContent = symbol;
+
+                pieceElement.className =
+                    "piece " +
+                    (piece.color === "w"
+                        ? "white-piece"
+                        : "black-piece");
+
+                square.appendChild(pieceElement);
+            }
+
+            square.addEventListener("click", () => {
+                handleSquare(squareName);
+            });
+
+            board.appendChild(square);
+        }
+    }
+}
+
+function handleSquare(squareName) {
+
+    if (engineThinking || gameFinished) return;
+
+    if (selectedSquare) {
+
+        const move = possibleMoves.find(
+            move => move.to === squareName
+        );
+
+        if (move) {
+
+            const capturedPiece = chess.get(squareName);
+
+            const result = chess.move({
+                from: selectedSquare,
+                to: squareName,
+                promotion: "q"
+            });
+
+            if (result) {
+
+                if (
+                    capturedPiece &&
+                    capturedPiece.type === "q" &&
+                    capturedPiece.color === "b" &&
+                    !queenMessageShown
+                ) {
+                    queenMessageShown = true;
+
+                    showMessage(
+                        players[currentPlayer].queen
+                    );
+                }
+
+                selectedSquare = null;
+                possibleMoves = [];
+
+                renderBoard();
+
+                afterPlayerMove();
+
+                return;
+            }
+        }
+    }
+
+    const piece = chess.get(squareName);
+
+    if (piece && piece.color === "w") {
+
+        selectedSquare = squareName;
+
+        possibleMoves = chess.moves({
+            square: squareName,
+            verbose: true
+        });
+
+    } else {
+
+        selectedSquare = null;
+        possibleMoves = [];
+    }
+
+    renderBoard();
+}
+
+function showAction(text, callback) {
+
+    action.textContent = text;
+    action.style.display = "block";
+    action.onclick = callback;
+}function afterPlayerMove() {
+
+    if (chess.game_over()) {
+
+        if (chess.in_checkmate()) {
+            finishWin();
+        } else {
+            finishLoss();
+        }
+
+        return;
+    }
+
+    engineThinking = true;
+
+    status.textContent = "Opponent's turn";
+
+    engine.postMessage("position fen " + chess.fen());
+
+    engine.postMessage("go depth 7");
+}
+
+function afterAIMove() {
+
+    engineThinking = false;
+
+    renderBoard();
+
+    status.textContent = "Your turn";
+
+    if (chess.game_over()) {
+
+        if (chess.in_checkmate()) {
+            finishLoss();
+        } else {
+            finishLoss();
+        }
+    }
+}
+
+function finishWin() {
+
+    gameFinished = true;
+    engineThinking = false;
+
+    status.textContent = "Game won";
+
+    if (currentPlayer === 2) {
+
+        status.textContent = "All games won";
+
+        setTimeout(() => {
+            window.location.href = "reward.html";
+        }, 1200);
+
+    } else {
+
+        showAction("Next opponent", () => {
+            setOpponent(currentPlayer + 1);
+        });
+
+    }
+}
+
+function finishLoss() {
+
+    gameFinished = true;
+    engineThinking = false;
+
+    status.textContent = "Game over";
+
+    showMessage(players[currentPlayer].lose);
+
+    showAction("Restart", () => {
+        setOpponent(0);
+    });
+}
+
+engine.onmessage = function(event) {
+
+    const data = event.data;
+
+    if (data === "uciok") {
+
+        engine.postMessage(
+            "setoption name Skill Level value 0"
+        );
+
+        engine.postMessage("isready");
+
+        return;
+    }
+
+    if (data === "readyok") {
+        return;
+    }
+
+    if (data.startsWith("bestmove")) {
+
+        if (!engineThinking || gameFinished) return;
+
+        const bestMove = data.split(" ")[1];
+
+        if (!bestMove || bestMove === "(none)") {
+            engineThinking = false;
+            finishLoss();
+            return;
+        }
+
+        chess.move({
+            from: bestMove.substring(0, 2),
+            to: bestMove.substring(2, 4),
+            promotion: bestMove.substring(4, 5) || "q"
+        });
+
+        afterAIMove();
+    }
+};
+
+engine.onerror = function() {
+    status.textContent = "Chess engine failed to load";
+};
+
+engine.postMessage("uci");
+
+setOpponent(0);
+
+</script>
+</body>
+</html>
