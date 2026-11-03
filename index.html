@@ -5,22 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Chess</title>
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
+
 <style>
 :root {
-    --bg:#f1f7f0;
-    --bg1:#dcebd9;
-    --bg2:#cfe4ce;
-    --text:#3f6043;
-    --heading:#3e7547;
-    --border:#83b58a;
-    --soft:#e6f3e5;
-    --ornament:#75a77c;
-    --card:rgba(255,255,255,.9);
-    --light:#f8fcf6;
-    --dark:#c8dfc7;
-    --selected:#a9cfae;
-    --legal:rgba(80,140,90,.3);
-    --capture:rgba(65,115,75,.35);
+    --bg-base:#f3f7f2;
+    --bg-grad-1:#dce8dc;
+    --bg-grad-2:#d3ead3;
+    --text-main:#3f6043;
+    --text-heading:#467a4c;
+    --accent-border:#82bd8b;
+    --accent-soft:#e9f9eb;
+    --accent-badge:#dff8e2;
+    --ornament-color:#79b882;
+    --card-bg:rgba(255,255,255,.88);
+    --board-light:#f9fdf8;
+    --board-dark:#c9dfca;
+    --selected:#afd2b3;
+    --legal:rgba(112,162,120,.28);
+    --capture:rgba(80,125,85,.3);
 }
 
 * {
@@ -39,10 +41,10 @@ body {
     min-height:100vh;
     overflow-x:hidden;
     background:
-        radial-gradient(circle at 10% 12%,var(--bg1),transparent 28%),
-        radial-gradient(circle at 90% 85%,var(--bg2),transparent 30%),
-        var(--bg);
-    color:var(--text);
+        radial-gradient(circle at 10% 12%,var(--bg-grad-1),transparent 28%),
+        radial-gradient(circle at 90% 85%,var(--bg-grad-2),transparent 30%),
+        var(--bg-base);
+    color:var(--text-main);
     font-family:Georgia,"Times New Roman",serif;
 }
 
@@ -56,7 +58,7 @@ body {
 
 .decorations span {
     position:absolute;
-    color:var(--ornament);
+    color:var(--ornament-color);
     opacity:.35;
     animation:float 5s ease-in-out infinite;
 }
@@ -71,6 +73,14 @@ body {
 @keyframes float {
     0%,100%{transform:translateY(0) rotate(0)}
     50%{transform:translateY(-7px) rotate(7deg)}
+}
+
+header {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:25px;
+    padding:8px;
 }
 
 main {
@@ -88,19 +98,19 @@ main {
     align-items:center;
     justify-content:center;
     gap:10px;
-    color:var(--ornament);
+    color:var(--ornament-color);
     margin-bottom:13px;
 }
 
 .ornament i {
     width:35px;
     height:1px;
-    background:var(--ornament);
+    background:var(--ornament-color);
     opacity:.45;
 }
 
 h1 {
-    color:var(--heading);
+    color:var(--text-heading);
     font-size:29px;
     font-weight:normal;
     margin:0 0 8px;
@@ -116,8 +126,8 @@ h1 {
 .game-panel {
     width:100%;
     padding:12px;
-    background:var(--card);
-    border:1px solid var(--border);
+    background:var(--card-bg);
+    border:1px solid var(--accent-border);
     border-radius:18px;
     box-shadow:0 8px 30px rgba(0,0,0,.04);
 }
@@ -130,16 +140,16 @@ h1 {
 }
 
 .avatar {
-    width:62px;
-    height:62px;
+    width:53px;
+    height:53px;
     flex-shrink:0;
-    border-radius:14px;
-    background:var(--soft);
-    border:1px solid var(--border);
+    border-radius:13px;
+    background:var(--accent-soft);
+    border:1px solid var(--accent-border);
     display:flex;
     align-items:center;
     justify-content:center;
-    color:var(--ornament);
+    color:var(--ornament-color);
     font-size:26px;
     overflow:hidden;
 }
@@ -152,7 +162,7 @@ h1 {
 
 .opponent-name {
     font-size:15px;
-    color:var(--heading);
+    color:var(--text-heading);
     margin-bottom:5px;
 }
 
@@ -164,7 +174,7 @@ h1 {
 .progress-track {
     width:100%;
     height:4px;
-    background:var(--soft);
+    background:var(--accent-soft);
     border-radius:10px;
     margin-top:7px;
     overflow:hidden;
@@ -173,7 +183,7 @@ h1 {
 .progress-fill {
     height:100%;
     width:33.333%;
-    background:var(--ornament);
+    background:var(--ornament-color);
     transition:width .3s;
 }
 
@@ -182,7 +192,7 @@ h1 {
     padding:6px;
     border-radius:13px;
     background:rgba(255,255,255,.45);
-    border:1px solid var(--bg2);
+    border:1px solid var(--bg-grad-2);
 }
 
 #board-wrapper {
@@ -196,7 +206,7 @@ h1 {
     display:grid;
     grid-template-columns:repeat(8,1fr);
     grid-template-rows:repeat(8,1fr);
-    border:2px solid var(--border);
+    border:2px solid var(--accent-border);
     border-radius:9px;
     overflow:hidden;
     user-select:none;
@@ -211,8 +221,8 @@ h1 {
     cursor:pointer;
 }
 
-.square.white{background:var(--light)}
-.square.black{background:var(--dark)}
+.square.white{background:var(--board-light)}
+.square.black{background:var(--board-dark)}
 .square.selected{background:var(--selected)!important}
 
 .square.last-move {
@@ -262,11 +272,85 @@ h1 {
     gap:8px;
     padding:10px 12px;
     margin-top:10px;
-    background:var(--soft);
-    border:1px solid var(--border);
+    background:var(--accent-soft);
+    border:1px solid var(--accent-border);
     border-radius:11px;
     font-size:12px;
-    color:var(--heading);
+    color:var(--text-heading);
+}
+
+.status-box {
+    min-height:24px;
+    margin-top:10px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:var(--text-heading);
+    font-size:12px;
+}
+
+.dialogue {
+    display:none;
+    margin-top:10px;
+    padding:13px 15px;
+    background:var(--accent-soft);
+    border:1px solid var(--accent-border);
+    border-radius:12px;
+    font-size:13px;
+    line-height:1.6;
+    color:var(--text-main);
+    white-space:pre-wrap;
+}
+
+.character-area {
+    display:none;
+    justify-content:center;
+    margin-top:12px;
+}
+
+.character-area img {
+    max-width:180px;
+    max-height:220px;
+    object-fit:contain;
+}
+
+.controls {
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:12px;
+}
+
+.btn {
+    padding:11px 20px;
+    border:1px solid var(--accent-border);
+    border-radius:100px;
+    background:var(--card-bg);
+    color:var(--text-heading);
+    font-family:Georgia,serif;
+    font-size:13px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn:hover {
+    background:var(--accent-soft);
+    transform:translateY(-1px);
+}
+
+.btn.primary {
+    background:var(--accent-badge);
+}
+
+.btn:disabled {
+    opacity:.5;
+    cursor:default;
+    transform:none;
+}
+
+#action-button {
+    display:none;
 }
 
 .captured-group {
@@ -285,83 +369,8 @@ h1 {
     font-weight:bold;
 }
 
-.status-box {
-    min-height:24px;
-    margin-top:10px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
-    color:var(--heading);
-    font-size:12px;
-}
-
-.dialogue {
-    display:none;
-    position:relative;
-    margin:14px 5px 4px;
-    padding:13px 15px;
-    background:var(--soft);
-    border:1px solid var(--border);
-    border-radius:15px;
-    font-size:13px;
-    line-height:1.6;
-    color:var(--text);
-    white-space:pre-wrap;
-}
-
-.dialogue::before {
-    content:"";
-    position:absolute;
-    top:-8px;
-    left:22px;
-    width:14px;
-    height:14px;
-    background:var(--soft);
-    border-left:1px solid var(--border);
-    border-top:1px solid var(--border);
-    transform:rotate(45deg);
-}
-
-.controls {
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    margin-top:12px;
-}
-
-.btn {
-    padding:11px 20px;
-    border:1px solid var(--border);
-    border-radius:100px;
-    background:var(--card);
-    color:var(--heading);
-    font-family:Georgia,serif;
-    font-size:13px;
-    cursor:pointer;
-    transition:.2s;
-}
-
-.btn:hover {
-    background:var(--soft);
-    transform:translateY(-1px);
-}
-
-.btn.primary {
-    background:#d9ecd8;
-}
-
-.btn:disabled {
-    opacity:.5;
-    cursor:default;
-    transform:none;
-}
-
-#action-button {
-    display:none;
-}
-
 @media(max-width:600px) {
+    header{padding:8px}
     main{padding:22px 10px 35px}
     .game-panel{padding:9px}
 }
@@ -378,13 +387,15 @@ h1 {
     <span>♡</span>
 </div>
 
+<header></header>
+
 <main>
     <div class="ornament">
         <span>✦</span><i></i><span>♡</span><i></i><span>✦</span>
     </div>
 
     <h1>Chess</h1>
-    <p class="subtitle"></p>
+    <p class="subtitle">Three opponents. Three games.</p>
 
     <div class="game-panel">
         <div class="opponent-card">
@@ -394,7 +405,7 @@ h1 {
             </div>
 
             <div style="flex:1">
-                <div class="opponent-name" id="opponent-name">Opponent 1</div>
+                <div class="opponent-name" id="opponent-name"></div>
                 <div class="opponent-progress" id="opponent-progress">1 of 3</div>
                 <div class="progress-track">
                     <div class="progress-fill" id="progress-fill"></div>
@@ -414,6 +425,11 @@ h1 {
         </div>
 
         <div class="status-box" id="status-box">Your turn</div>
+
+        <div class="character-area" id="character-area">
+            <img id="character-image" src="" alt="">
+        </div>
+
         <div class="dialogue" id="dialogue"></div>
 
         <div class="controls">
@@ -425,35 +441,30 @@ h1 {
     <div class="ornament" style="margin-top:25px">
         <span>✧</span><i></i><span>♡</span><i></i><span>✧</span>
     </div>
-</main><script>
-const players = [
-    {
-        name: "Basil",
-        picture: "ceddbd05043353a83d9bdadfe5b54280.jpg",
-        start: "Oh are we starting? I'll do my best to win!",
-        queen: "Oh no! The queen shes gone i couldn't save her in time",
-        lose: "I can't believe I lost, I'm so sorry I should've tried harder"
-    },
-    {
-        name: "White Lily cookie",
-        picture: "7427fa598872052d3f1e32db112ed340.jpg",
-        start: "Every move carries a purpose Let us see where this game leads us",
-        queen: "It seems like even the strongest light can fade but I must not lose hope",
-        lose: "It seems like even the strongest light can fade but I must not lose hope"
-    },
-    {
-        name: "Diavolo",
-        picture: "248a541fb106ab50e1605ccab550930f.jpg",
-        start: "Is this how it begins again??another loss another endless cycle",
-        queen: "I wonder how long it will take you to realize that you already lost",
-        lose: "IMPOSSIBLE FATE CHOOSE ME TO STAND AT THE TOP I REFUSE TO ACCEPT THIS CHECKMATE A MERE INSECT COULD NEVER DEFEAT THE EMPEROR"
-    }
-];
+</main>
 
-const difficulties = [
-    {depth:0, tolerance:220, choices:7},
-    {depth:1, tolerance:130, choices:5},
-    {depth:2, tolerance:70, choices:3}
+<script>const players = [
+    {
+        name:"Basil",
+        picture:"ceddbd05043353a83d9bdadfe5b54280.jpg",
+        start:"Oh are we starting? I'll do my best to win!",
+        queen:"Oh no! The queen shes gone i couldn't save her in time",
+        lose:"I can't believe I lost, I'm so sorry I should've tried harder"
+    },
+    {
+        name:"White Lily cookie",
+        picture:"7427fa598872052d3f1e32db112ed340.jpg",
+        start:"Every move carries a purpose Let us see where this game leads us",
+        queen:"It seems like even the strongest light can fade but I must not lose hope",
+        lose:"It seems like even the strongest light can fade but I must not lose hope"
+    },
+    {
+        name:"Diavolo",
+        picture:"248a541fb106ab50e1605ccab550930f.jpg",
+        start:"Is this how it begins again??another loss another endless cycle",
+        queen:"I wonder how long it will take you to realize that you already lost",
+        lose:"IMPOSSIBLE FATE CHOOSE ME TO STAND AT THE TOP I REFUSE TO ACCEPT THIS CHECKMATE A MERE INSECT COULD NEVER DEFEAT THE EMPEROR"
+    }
 ];
 
 const pieceCDN = {
@@ -480,6 +491,8 @@ const pieceValues = {
     k:20000
 };
 
+const botDepths = [1,1,2];
+
 let game;
 let currentPlayer = 0;
 let selectedSquare = null;
@@ -499,6 +512,20 @@ function showDialogue(text) {
     } else {
         box.textContent = "";
         box.style.display = "none";
+    }
+}
+
+function showCharacter() {
+    const player = players[currentPlayer];
+    const area = document.getElementById("character-area");
+    const image = document.getElementById("character-image");
+
+    if (player.picture && player.picture.trim()) {
+        image.src = player.picture;
+        area.style.display = "flex";
+    } else {
+        image.removeAttribute("src");
+        area.style.display = "none";
     }
 }
 
@@ -633,8 +660,8 @@ function renderPieces() {
         if (selected) selected.classList.add("selected");
 
         game.moves({
-            square: selectedSquare,
-            verbose: true
+            square:selectedSquare,
+            verbose:true
         }).forEach(move => {
             const target = document.querySelector(
                 `[data-square="${move.to}"]`
@@ -732,8 +759,8 @@ function handleSquareClick(square) {
     }
 
     const legalMove = game.moves({
-        square: selectedSquare,
-        verbose: true
+        square:selectedSquare,
+        verbose:true
     }).find(move => move.to === square);
 
     if (!legalMove) return;
@@ -745,8 +772,8 @@ function makePlayerMove(from, to) {
     const captured = game.get(to);
 
     const move = game.move({
-        from:from,
-        to:to,
+        from,
+        to,
         promotion:"q"
     });
 
@@ -810,7 +837,7 @@ function evaluatePosition() {
 }
 
 function orderMoves(moves) {
-    return moves.sort((a, b) => {
+    return moves.sort((a,b) => {
         const valueA = a.captured
             ? pieceValues[a.captured] * 10 - pieceValues[a.piece]
             : 0;
@@ -821,18 +848,12 @@ function orderMoves(moves) {
 
         return valueB - valueA;
     });
-}function minimax(depth, alpha, beta, ply) {
-    if (game.in_checkmate()) {
-        return -100000 + ply;
-    }
+}
 
-    if (game.game_over()) {
-        return 0;
-    }
-
-    if (depth === 0) {
-        return evaluatePosition();
-    }
+function minimax(depth, alpha, beta, ply) {
+    if (game.in_checkmate()) return -100000 + ply;
+    if (game.game_over()) return 0;
+    if (depth === 0) return evaluatePosition();
 
     const moves = orderMoves(game.moves({verbose:true}));
     let bestScore = -Infinity;
@@ -867,8 +888,11 @@ function chooseComputerMove() {
 
     if (!moves.length) return null;
 
-    const difficulty = difficulties[currentPlayer];
-    const candidates = [];
+    if (botDepths[currentPlayer] === 1) {
+        return moves[Math.floor(Math.random() * moves.length)];
+    }
+
+    let candidates = [];
 
     for (const move of moves) {
         game.move({
@@ -877,32 +901,24 @@ function chooseComputerMove() {
             promotion:move.promotion || "q"
         });
 
-        const score = -minimax(
-            difficulty.depth,
-            -Infinity,
-            Infinity,
-            1
-        );
+        const score = -minimax(1, -Infinity, Infinity, 1);
 
         game.undo();
 
-        candidates.push({
-            move,
-            score
-        });
+        candidates.push({move,score});
     }
 
     candidates.sort((a,b) => b.score - a.score);
 
     const bestScore = candidates[0].score;
 
-    const goodMoves = candidates.filter(candidate =>
-        candidate.score >= bestScore - difficulty.tolerance
+    const goodMoves = candidates.filter(
+        candidate => candidate.score >= bestScore - 150
     );
 
-    const options = goodMoves.slice(0, difficulty.choices);
-
-    return options[Math.floor(Math.random() * options.length)].move;
+    return goodMoves[
+        Math.floor(Math.random() * Math.min(5,goodMoves.length))
+    ].move;
 }
 
 function makeComputerMove() {
@@ -980,6 +996,7 @@ function finishWin() {
     selectedSquare = null;
 
     renderPieces();
+    showCharacter();
 
     if (currentPlayer === 2) {
         setStatus("All three opponents defeated.");
@@ -993,6 +1010,7 @@ function finishWin() {
     }
 
     setStatus("Victory");
+    showDialogue(players[currentPlayer].lose);
 
     showAction("Next opponent", () => {
         currentPlayer++;
@@ -1005,10 +1023,13 @@ function finishLoss(reason) {
     isThinking = false;
     selectedSquare = null;
 
+    renderPieces();
+    showCharacter();
+
     setStatus(reason || "Game over");
     showDialogue(players[currentPlayer].lose);
 
-    showAction("Restart all 3", () => {
+    showAction("Restart from first", () => {
         currentPlayer = 0;
         startOpponent();
     });
@@ -1024,9 +1045,13 @@ function startOpponent() {
     queenMessageShown = false;
 
     hideAction();
+
+    document.getElementById("character-area").style.display = "none";
+
     updateOpponent();
     showDialogue(players[currentPlayer].start);
     setStatus("Your turn");
+
     renderPieces();
 }
 
